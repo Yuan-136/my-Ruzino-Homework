@@ -20,6 +20,8 @@ class FastMassSpring : public MassSpring {
     unsigned max_iter = 100;  // (HW Optional) add UI for this parameter
 
    protected:
-    // Custom variables, like prefactorized A
+    Eigen::SparseMatrix<double> A;
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+    Eigen::MatrixXd fixed_rhs_offset;
 };
 }  // namespace USTC_CG::mass_spring

@@ -5,7 +5,7 @@
 NODE_DEF_OPEN_SCOPE
 NODE_DECLARATION_FUNCTION(create_grid)
 {
-    b.add_input<int>("resolution").min(1).max(20).default_val(2);
+    b.add_input<int>("resolution").min(1).max(100).default_val(2);
     b.add_input<float>("size").min(1).max(20).default_val(1.0f);
     b.add_output<Geometry>("Geometry");
 }

@@ -26,8 +26,8 @@ NODE_DECLARATION_FUNCTION(hw8_mass_spring)
     b.add_input<Geometry>("Mesh");
 
     // Simulation parameters
-    b.add_input<float>("stiffness").default_val(1000).min(100).max(10000);
-    b.add_input<float>("h").default_val(0.0333333333f).min(0.0).max(0.5);
+    b.add_input<float>("stiffness").default_val(10).min(1).max(1000);
+    b.add_input<float>("h").default_val(0.001f).min(0.0).max(0.02);
     b.add_input<float>("damping").default_val(0.995).min(0.0).max(1.0);
     b.add_input<float>("gravity").default_val(-9.8).min(-20.).max(20.);
 
@@ -43,9 +43,9 @@ NODE_DECLARATION_FUNCTION(hw8_mass_spring)
         .max(2.0);
     b.add_input<float>("sphere radius").default_val(0.4).min(0.0).max(5.0);
     ;
-    b.add_input<float>("sphere center x").default_val(0.0);
-    b.add_input<float>("sphere center y").default_val(0.0);
-    b.add_input<float>("sphere center z").default_val(0.0);
+    b.add_input<float>("sphere center x").default_val(0.0).min(-1.0).max(1.0);
+    b.add_input<float>("sphere center y").default_val(0.0).min(-1.0).max(1.0);
+    b.add_input<float>("sphere center z").default_val(-0.35).min(-1.0).max(1.0);
     // -----------------------------------------------------------------------------------------------------------
 
     // Useful switches (0 or 1). You can add more if you like.

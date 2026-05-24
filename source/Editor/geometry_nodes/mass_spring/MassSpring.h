@@ -98,6 +98,8 @@ class MassSpring {
     bool enable_debug_output = false;
 
    protected:
+    void printDebugStats(const char* solver_name);
+
     Eigen::MatrixXd init_X;  // For reset
     Eigen::MatrixXd X;
     Eigen::MatrixXd vel;

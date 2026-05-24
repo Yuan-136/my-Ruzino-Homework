@@ -2,6 +2,7 @@
 #include <pxr/base/vt/array.h>
 
 #include <Eigen/Sparse>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -21,13 +22,46 @@ struct MassSpringStorage {
 };
 
 NODE_DEF_OPEN_SCOPE
+
+USTC_CG::mass_spring::EdgeSet get_tetrahedral_edges(const Geometry& geometry)
+{
+    USTC_CG::mass_spring::EdgeSet edges;
+    auto volume_mesh = operand_to_openvolumemesh(&geometry);
+    if (!volume_mesh || volume_mesh->n_cells() == 0) {
+        return edges;
+    }
+
+    for (auto c_it = volume_mesh->cells_begin();
+         c_it != volume_mesh->cells_end();
+         ++c_it) {
+        std::vector<int> cell_vertices;
+        for (auto cv_it = volume_mesh->cv_iter(*c_it); cv_it.valid();
+             ++cv_it) {
+            cell_vertices.push_back((*cv_it).idx());
+        }
+
+        for (int i = 0; i < cell_vertices.size(); i++) {
+            for (int j = i + 1; j < cell_vertices.size(); j++) {
+                int v0 = cell_vertices[i];
+                int v1 = cell_vertices[j];
+                if (v0 > v1) {
+                    std::swap(v0, v1);
+                }
+                edges.insert(std::make_pair(v0, v1));
+            }
+        }
+    }
+
+    return edges;
+}
+
 NODE_DECLARATION_FUNCTION(hw9_mass_spring)
 {
     b.add_input<Geometry>("Mesh");
 
     // Simulation parameters
-    b.add_input<float>("stiffness").default_val(1000).min(100).max(10000);
-    b.add_input<float>("h").default_val(0.0333333333f).min(0.0).max(0.5);
+    b.add_input<float>("stiffness").default_val(10).min(1).max(1000);
+    b.add_input<float>("h").default_val(0.001f).min(0.0).max(0.02);
     b.add_input<float>("damping").default_val(0.995).min(0.0).max(1.0);
     b.add_input<float>("gravity").default_val(-9.8).min(-20.).max(20.);
 
@@ -43,9 +77,9 @@ NODE_DECLARATION_FUNCTION(hw9_mass_spring)
         .max(2.0);
     b.add_input<float>("sphere radius").default_val(0.4).min(0.0).max(5.0);
     ;
-    b.add_input<float>("sphere center x").default_val(0.0);
-    b.add_input<float>("sphere center y").default_val(0.0);
-    b.add_input<float>("sphere center z").default_val(0.0);
+    b.add_input<float>("sphere center x").default_val(0.0).min(-1.0).max(1.0);
+    b.add_input<float>("sphere center y").default_val(0.0).min(-1.0).max(1.0);
+    b.add_input<float>("sphere center z").default_val(-0.35).min(-1.0).max(1.0);
     // -----------------------------------------------------------------------------------------------------------
 
     // Useful switches (0 or 1). You can add more if you like.
@@ -89,9 +123,20 @@ NODE_EXECUTION_FUNCTION(hw9_mass_spring)
             if (mass_spring != nullptr)
                 mass_spring.reset();
 
-            auto edges = get_edges(usd_faces_to_eigen(
-                mesh->get_face_vertex_counts(),
-                mesh->get_face_vertex_indices()));
+            auto edges = get_tetrahedral_edges(geometry);
+            if (!edges.empty()) {
+                std::cout << "Mass Spring: using tetrahedral volume edges, "
+                          << "number of edges = " << edges.size()
+                          << std::endl;
+            }
+            else {
+                edges = get_edges(usd_faces_to_eigen(
+                    mesh->get_face_vertex_counts(),
+                    mesh->get_face_vertex_indices()));
+                std::cout << "Mass Spring: using surface mesh edges, "
+                          << "number of edges = " << edges.size()
+                          << std::endl;
+            }
             auto vertices = usd_vertices_to_eigen(mesh->get_vertices());
             const float k = params.get_input<float>("stiffness");
             const float h = params.get_input<float>("h");

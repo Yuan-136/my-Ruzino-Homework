@@ -25,14 +25,24 @@ inline Eigen::MatrixXi usd_faces_to_eigen(
     const std::vector<int>& faceVertexCount,
     const std::vector<int>& faceVertexIndices)
 {
-    unsigned nFaces = faceVertexCount.size();
-    Eigen::MatrixXi F(nFaces, 3);
-    unsigned count = 0;
-    for (int i = 0; i < nFaces; i++) {
-        for (int j = 0; j < 3; j++) {
-            F(i, j) = faceVertexIndices[count];
-            count += 1;
+    unsigned nTriangles = 0;
+    for (int n : faceVertexCount) {
+        if (n >= 3) {
+            nTriangles += n - 2;
         }
+    }
+
+    Eigen::MatrixXi F(nTriangles, 3);
+    unsigned index_offset = 0;
+    unsigned triangle_id = 0;
+    for (int n : faceVertexCount) {
+        for (int j = 1; j + 1 < n; j++) {
+            F(triangle_id, 0) = faceVertexIndices[index_offset];
+            F(triangle_id, 1) = faceVertexIndices[index_offset + j];
+            F(triangle_id, 2) = faceVertexIndices[index_offset + j + 1];
+            triangle_id++;
+        }
+        index_offset += n;
     }
     return F;
 }
